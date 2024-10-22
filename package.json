@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
+    "@headlessui/vue": "^1.7.23",
     "ant-design-vue": "^4.2.5",
+    "axios": "^1.7.7",
+    "dayjs": "^1.11.13",
     "vue": "^3.5.11",
     "vue-router": "^4.4.5"
   },

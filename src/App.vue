@@ -1,10 +1,16 @@
-<script setup>
+<script setup >
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+const route = useRoute();
 
+const layout = computed(() => {
+  const layout = route?.meta?.layout;
+  return layout ? layout : "div";
+});
 </script>
 
 <template>
-  <div>
-    <h1>Vue 3 + Vite + Tailwind CSS</h1>
-    <p>Vue 3 + Vite + Tailwind CSS</p>
-  </div>
+  <component :is="layout">
+    <router-view />
+  </component>
 </template>
