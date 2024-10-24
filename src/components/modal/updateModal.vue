@@ -24,13 +24,31 @@
           :label="field.label"
           :name="field.name"
         >
+          <template v-if="field.type === 'radio'">
+            <a-radio-group 
+              v-model:value="localFormState[field.name]"
+              :disabled="field.disabled"
+            >
+              <a-radio 
+                v-for="option in field.options" 
+                :key="option.value" 
+                :value="option.value"
+              >
+                {{ option.label }}
+              </a-radio>
+            </a-radio-group>
+          </template>
           <component
+            v-else
             :is="getComponentType(field.type)"
             v-model:value="localFormState[field.name]"
             :placeholder="`Enter ${field.label}`"
             :disabled="field.disabled"
+            :min="field.type === 'int' ? 0 : null"
+            :format="field.type === 'date' ? dateFormat : null"
             :options="field.options || []"
-            :mode="field.type === 'multiselect' ? 'multiple' : null"
+            :mode="field.type === 'multiselect' ? 'multiple' : undefined"
+            @change="(val, extra) => handleFieldChange(field.name, val, extra, field.type)"
           />
         </a-form-item>
       </a-form>
@@ -47,8 +65,16 @@
 
 <script>
 import { defineComponent, ref, reactive, watch } from 'vue';
-import { message, Input, DatePicker, InputNumber, Radio, Select } from 'ant-design-vue';
-import { EditOutlined } from '@ant-design/icons-vue';
+import { 
+  message, 
+  Input, 
+  DatePicker, 
+  InputNumber, 
+  Upload, 
+  Select, 
+  Radio 
+} from 'ant-design-vue';
+import { EditOutlined, UploadOutlined } from '@ant-design/icons-vue';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 import dayjs from 'dayjs';
 
@@ -58,6 +84,7 @@ export default defineComponent({
   name: 'UpdateModal',
   components: {
     EditOutlined,
+    UploadOutlined,
   },
   props: {
     objectName: {
@@ -85,11 +112,16 @@ export default defineComponent({
     const isModalOpen = ref(false);
     const loading = ref(false);
     const localFormState = reactive({});
+    const formRef = ref(null);
 
     watch(() => props.formState, (newVal) => {
       Object.keys(newVal).forEach(key => {
-        if (props.formFields.find(field => field.name === key && field.type === 'date')) {
+        const field = props.formFields.find(f => f.name === key);
+        if (field?.type === 'date') {
           localFormState[key] = newVal[key] ? dayjs(newVal[key]) : null;
+        } else if (field?.type === 'radio') {
+          // Ensure radio value is properly initialized
+          localFormState[key] = newVal[key] !== undefined ? newVal[key] : '';
         } else {
           localFormState[key] = newVal[key];
         }
@@ -104,8 +136,24 @@ export default defineComponent({
       isModalOpen.value = false;
     };
 
+    const handleFieldChange = (fieldName, value, extra, fieldType) => {
+      if (fieldType === 'date') {
+        localFormState[fieldName] = value;
+      } else if (fieldType === 'radio') {
+        localFormState[fieldName] = value;
+      } else if (fieldType === 'select' || fieldType === 'multiselect') {
+        localFormState[fieldName] = value;
+      } else {
+        localFormState[fieldName] = value;
+      }
+    };
+
     const handleOk = async () => {
       try {
+        if (formRef.value) {
+          await formRef.value.validate();
+        }
+        
         loading.value = true;
         const formData = { ...localFormState };
 
@@ -134,8 +182,8 @@ export default defineComponent({
           return DatePicker;
         case 'password':
           return Input.Password;
-        case 'radio':
-          return Radio.Group;
+        case 'image':
+          return Upload;
         case 'select':
         case 'multiselect':
           return Select;
@@ -149,10 +197,12 @@ export default defineComponent({
       isModalOpen,
       loading,
       localFormState,
+      formRef,
       dateFormat: 'YYYY-MM-DD',
       showModal,
       handleCancel,
       handleOk,
+      handleFieldChange,
       getComponentType,
     };
   },

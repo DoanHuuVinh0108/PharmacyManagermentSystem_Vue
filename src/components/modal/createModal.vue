@@ -1,10 +1,19 @@
 <template>
   <div>
-    <a-button type="primary" @click="showModal">Add {{ objectName }}<PlusCircleOutlined /></a-button>
-    <a-modal v-model:open="visible" :title="`Add ${objectName}`" @ok="handleOk" @cancel="handleCancel">
+    <a-button type="primary" @click="showModal">
+      Add {{ objectName }}<PlusCircleOutlined />
+    </a-button>
+    <a-modal 
+      v-model:open="visible" 
+      :title="`Add ${objectName}`" 
+      @ok="handleOk" 
+      @cancel="handleCancel"
+    >
       <template #footer>
         <a-button key="back" @click="handleCancel">Return</a-button>
-        <a-button key="submit" type="primary" :loading="loading" @click="handleOk">Submit</a-button>
+        <a-button key="submit" type="primary" :loading="loading" @click="handleOk">
+          Submit
+        </a-button>
       </template>
       <a-form
         layout="horizontal"
@@ -22,23 +31,39 @@
           :label="field.label"
           :name="field.name"
         >
-          <a-date-picker
-            v-if="field.type === 'string' && (field.name === 'manufacturingDate' || field.name === 'expiryDate')"
-            v-model:value="formState[field.name]"
-            :placeholder="`Enter ${field.label}`"
-            :format="dateFormat"
-            :valueFormat="dateFormat"
-            :disabled="field.disabled"
-          />
+          <template v-if="field.type === 'radio'">
+            <a-radio-group 
+              v-model:value="formState[field.name]"
+              :disabled="field.disabled"
+            >
+              <a-radio 
+                v-for="option in field.options" 
+                :key="option.value" 
+                :value="option.value"
+              >
+                {{ option.label }}
+              </a-radio>
+            </a-radio-group>
+          </template>
+          <template v-else-if="field.type === 'select' || field.type === 'multiselect'">
+            <a-select
+              v-model:value="formState[field.name]"
+              :placeholder="`Select ${field.label}`"
+              :disabled="field.disabled"
+              :mode="field.type === 'multiselect' ? 'multiple' : undefined"
+              :options="field.options || []"
+              @change="(val) => handleFieldChange(field.name, val, null, field.type)"
+            />
+          </template>
           <component
             v-else
             :is="getComponentType(field.type)"
             v-model:value="formState[field.name]"
             :placeholder="`Enter ${field.label}`"
-            :options="field.type === 'select' || field.type === 'multiselect' ? field.options : null"
-            :mode="field.type === 'multiselect' ? 'multiple' : null"
             :disabled="field.disabled"
             :min="field.type === 'int' ? 0 : null"
+            :format="field.type === 'date' ? dateFormat : null"
+            @change="(val, extra) => handleFieldChange(field.name, val, extra, field.type)"
           />
         </a-form-item>
       </a-form>
@@ -49,15 +74,22 @@
 <script>
 import { defineComponent, ref } from 'vue';
 import { PlusCircleOutlined } from '@ant-design/icons-vue';
-import { DatePicker, Input, InputNumber, Upload, Select } from 'ant-design-vue';
+import { 
+  DatePicker, 
+  Input, 
+  InputNumber, 
+  Upload, 
+  Select, 
+  Radio,
+  message 
+} from 'ant-design-vue';
 import dayjs from 'dayjs';    
 import localizedFormat from 'dayjs/plugin/localizedFormat'; 
 
 dayjs.extend(localizedFormat); 
 
-const dateFormat = 'YYYY-MM-DD';
-
 export default defineComponent({
+  name: 'CreateModal',
   props: {
     objectName: {
       type: String,
@@ -85,6 +117,7 @@ export default defineComponent({
     const loading = ref(false);
     const visible = ref(false);
     const formRef = ref(null);
+    const dateFormat = 'YYYY-MM-DD';
 
     const showModal = () => {
       visible.value = true;
@@ -93,7 +126,37 @@ export default defineComponent({
 
     const resetFormState = () => {
       for (const field of props.formFields) {
-        props.formState[field.name] = '';
+        switch (field.type) {
+          case 'date':
+            props.formState[field.name] = null;
+            break;
+          case 'multiselect':
+            props.formState[field.name] = [];
+            break;
+          case 'select':
+            props.formState[field.name] = undefined;
+            break;
+          case 'radio':
+            props.formState[field.name] = field.defaultValue || '';
+            break;
+          case 'int':
+            props.formState[field.name] = undefined;
+            break;
+          default:
+            props.formState[field.name] = '';
+        }
+      }
+    };
+
+    const handleFieldChange = (fieldName, value, extra, fieldType) => {
+      if (fieldType === 'date') {
+        props.formState[fieldName] = value;
+      } else if (fieldType === 'select' || fieldType === 'multiselect') {
+        props.formState[fieldName] = value;
+      } else if (fieldType === 'radio') {
+        props.formState[fieldName] = value;
+      } else {
+        props.formState[fieldName] = value;
       }
     };
 
@@ -105,21 +168,24 @@ export default defineComponent({
         await formRef.value.validate();
         
         const formData = { ...props.formState };
-
-        // Handle date string conversion
-        if (formData.manufacturingDate) {
-          formData.manufacturingDate = formData.manufacturingDate;
-        }
-        if (formData.expiryDate) {
-          formData.expiryDate = formData.expiryDate;
-        }
+        props.formFields.forEach((field) => {
+          if (field.type === 'date' && formData[field.name]) {
+            const dateValue = dayjs(formData[field.name]);
+            if (dateValue.isValid()) {
+              formData[field.name] = dateValue.format(dateFormat);
+            } else {
+              console.warn(`Invalid date value for field ${field.name}:`, formData[field.name]);
+            }
+          }
+        });
 
         await props.createObject(formData);
-        console.log("Object created successfully!");
         emit(`${props.objectName}Created`);
         resetFormState();
+        message.success(`${props.objectName} created successfully`);
       } catch (error) {
         console.error('Validation/API call error:', error);
+        message.error(`Failed to create ${props.objectName}`);
       } finally {
         loading.value = false;
         visible.value = false;
@@ -135,13 +201,12 @@ export default defineComponent({
       switch (type) {
         case 'int':
           return InputNumber;
+        case 'date':
+          return DatePicker;
         case 'password':
           return Input.Password;
         case 'image':
           return Upload;
-        case 'select':
-        case 'multiselect':
-          return Select;
         case 'string':
         default:
           return Input;
@@ -169,6 +234,7 @@ export default defineComponent({
       labelCol,
       wrapperCol,
       dateFormat,
+      handleFieldChange,
     };
   },
   components: {
