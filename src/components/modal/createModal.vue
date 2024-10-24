@@ -22,7 +22,16 @@
           :label="field.label"
           :name="field.name"
         >
+          <a-date-picker
+            v-if="field.type === 'string' && (field.name === 'manufacturingDate' || field.name === 'expiryDate')"
+            v-model:value="formState[field.name]"
+            :placeholder="`Enter ${field.label}`"
+            :format="dateFormat"
+            :valueFormat="dateFormat"
+            :disabled="field.disabled"
+          />
           <component
+            v-else
             :is="getComponentType(field.type)"
             v-model:value="formState[field.name]"
             :placeholder="`Enter ${field.label}`"
@@ -30,7 +39,6 @@
             :mode="field.type === 'multiselect' ? 'multiple' : null"
             :disabled="field.disabled"
             :min="field.type === 'int' ? 0 : null"
-            :format="field.type === 'date' ? dateFormat : null"
           />
         </a-form-item>
       </a-form>
@@ -85,7 +93,7 @@ export default defineComponent({
 
     const resetFormState = () => {
       for (const field of props.formFields) {
-        props.formState[field.name] = field.type === 'date' ? null : '';
+        props.formState[field.name] = '';
       }
     };
 
@@ -97,16 +105,14 @@ export default defineComponent({
         await formRef.value.validate();
         
         const formData = { ...props.formState };
-        props.formFields.forEach((field) => {
-          if (field.type === 'date' && formData[field.name]) {
-            const dateValue = dayjs(formData[field.name]);
-            if (dateValue.isValid()) {
-              formData[field.name] = dateValue.format(dateFormat);
-            } else {
-              console.warn(`Invalid date value for field ${field.name}:`, formData[field.name]);
-            }
-          }
-        });
+
+        // Handle date string conversion
+        if (formData.manufacturingDate) {
+          formData.manufacturingDate = formData.manufacturingDate;
+        }
+        if (formData.expiryDate) {
+          formData.expiryDate = formData.expiryDate;
+        }
 
         await props.createObject(formData);
         console.log("Object created successfully!");
@@ -129,8 +135,6 @@ export default defineComponent({
       switch (type) {
         case 'int':
           return InputNumber;
-        case 'date':
-          return DatePicker;
         case 'password':
           return Input.Password;
         case 'image':
@@ -164,6 +168,7 @@ export default defineComponent({
       getComponentType,
       labelCol,
       wrapperCol,
+      dateFormat,
     };
   },
   components: {
