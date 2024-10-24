@@ -6,7 +6,12 @@
         <a-button @click="refresh" style="margin-left: 20px" type="primary">Refresh</a-button>
     </a-flex>
 
-    <a-table :columns="columns" :data-source="categoryData" :scroll="{ x: 1500 }">
+    <a-table :columns="columns" :data-source="categoryData" :scroll="{ x: 1500 }" :pagination="{
+        current: currentPage,
+        pageSize: pageSize,
+        total: totalItems,
+        onChange: handlePageChange,
+    }">
         <template #bodyCell="{ column, text, record }">
             <template v-if="column.key === 'operation'">
                 <div class="justify-center text-center">
@@ -16,7 +21,7 @@
                             @CategoryUpdated="refresh" />
                     </div>
                     <div class="inline-block">
-                        <DeleteModal :id="{id:record.id}" @deleted="deleteCategory" />
+                        <DeleteModal :id="{ id: record.id }" @deleted="deleteCategory" />
                     </div>
                 </div>
             </template>
@@ -70,7 +75,6 @@ export default {
                 { label: 'Công Ty Sản Xuất', name: 'congTySx', type: 'string' },
                 { label: 'Nước Sản Xuất', name: 'nuocSx', type: 'string' }
             ],
-
             categoryFormRulesCreate: {
                 id: [{ required: true, message: 'Please input the ID!', trigger: 'blur' }],
                 tenThuoc: [{ required: true, message: 'Please input the medicine name!', trigger: 'blur' }],
@@ -124,7 +128,10 @@ export default {
                 { title: 'Nước sản xuất', dataIndex: 'countryOfManufacture', key: 'countryOfManufacture', width: 150 },
                 { title: 'Action', key: 'operation', fixed: 'right', width: 150 }
             ],
-            categoryData: [] // Category data is initialized as an empty array
+            categoryData: [],
+            currentPage: 1,
+            pageSize: 10,
+            totalItems: 0
         };
     },
     methods: {
@@ -146,8 +153,12 @@ export default {
         },
         async fetchCategories() {
             try {
-                const categories = await getCategories();
-                this.categoryData = Array.isArray(categories) ? categories : [];
+                const response = await getCategories({
+                    page: this.currentPage,
+                    pageSize: this.pageSize,
+                });
+                this.categoryData = Array.isArray(response.items) ? response.items : [];
+                this.totalItems = response.totalItems;
             } catch (error) {
                 console.error('Failed to fetch categories:', error);
                 this.categoryData = [];
@@ -163,7 +174,11 @@ export default {
         },
         refresh() {
             this.fetchCategories(); // Refresh the category list
-        }
+        },
+        async handlePageChange(page) {
+            this.currentPage = page;  // Update the current page
+            await this.fetchCategories();  // Fetch the new page of data
+        },
     },
     async mounted() {
         await this.fetchCategories(); // Fetch categories when the component is mounted

@@ -29,9 +29,8 @@
             v-model:value="localFormState[field.name]"
             :placeholder="`Enter ${field.label}`"
             :disabled="field.disabled"
-            :min="field.type === 'int' ? 0 : null"
-            :format="field.type === 'date' ? dateFormat : null"
-            @change="(date, dateString) => field.type === 'date' && handleDateChange(field.name, date, dateString)"
+            :options="field.options || []"
+            :mode="field.type === 'multiselect' ? 'multiple' : null"
           />
         </a-form-item>
       </a-form>
@@ -45,12 +44,12 @@
     </a-modal>
   </div>
 </template>
+
 <script>
 import { defineComponent, ref, reactive, watch } from 'vue';
-import { message, Input, DatePicker, InputNumber, Upload } from 'ant-design-vue';
+import { message, Input, DatePicker, InputNumber, Radio, Select } from 'ant-design-vue';
 import { EditOutlined } from '@ant-design/icons-vue';
-import { UploadOutlined } from '@ant-design/icons-vue';  // Import Upload icon
-import localizedFormat from 'dayjs/plugin/localizedFormat'; 
+import localizedFormat from 'dayjs/plugin/localizedFormat';
 import dayjs from 'dayjs';
 
 dayjs.extend(localizedFormat);
@@ -59,7 +58,6 @@ export default defineComponent({
   name: 'UpdateModal',
   components: {
     EditOutlined,
-    UploadOutlined,
   },
   props: {
     objectName: {
@@ -88,7 +86,6 @@ export default defineComponent({
     const loading = ref(false);
     const localFormState = reactive({});
 
-    // Watch for formState changes and sync localFormState with props
     watch(() => props.formState, (newVal) => {
       Object.keys(newVal).forEach(key => {
         if (props.formFields.find(field => field.name === key && field.type === 'date')) {
@@ -107,16 +104,11 @@ export default defineComponent({
       isModalOpen.value = false;
     };
 
-    const handleDateChange = (fieldName, date, dateString) => {
-      localFormState[fieldName] = date;
-    };
-
     const handleOk = async () => {
       try {
         loading.value = true;
         const formData = { ...localFormState };
 
-        // Format date fields using dayjs
         Object.keys(formData).forEach(key => {
           if (formData[key] instanceof dayjs) {
             formData[key] = formData[key].format('YYYY-MM-DD');
@@ -124,7 +116,6 @@ export default defineComponent({
         });
 
         await props.updateObject(formData);
-        // message.success(`${props.objectName} updated successfully`);
         isModalOpen.value = false;
         emit(`${props.objectName}Updated`);
       } catch (error) {
@@ -143,8 +134,11 @@ export default defineComponent({
           return DatePicker;
         case 'password':
           return Input.Password;
-        case 'image':
-          return Upload;
+        case 'radio':
+          return Radio.Group;
+        case 'select':
+        case 'multiselect':
+          return Select;
         case 'string':
         default:
           return Input;
@@ -159,10 +153,8 @@ export default defineComponent({
       showModal,
       handleCancel,
       handleOk,
-      handleDateChange,
       getComponentType,
     };
   },
 });
-
 </script>

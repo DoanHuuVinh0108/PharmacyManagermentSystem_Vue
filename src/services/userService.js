@@ -2,9 +2,8 @@ import axios from "axios";
 
 const baseURL = 'https://localhost:7194/api/User';
 
-
-async function getUsers() {
-    const response = await axios.get(`${baseURL}/getAll`);
+async function getUsers({page, pageSize}) {
+    const response = await axios.get(`${baseURL}/getAll/${page}/${pageSize}`);
     console.log(response);
     if(response.status == 200) {
         return response.data;
@@ -45,4 +44,12 @@ async function findByPhoneNumber(phoneNumber) {
     return false;
 }
 
-export { getUsers,createUser,updateUser,deleteUser,findByPhoneNumber };
+async function getUserByRole(role){
+    const response = await axios.get(`${baseURL}/getByRole/${role}`);
+    if(response.status == 200) {
+        return response.data;
+    }
+    return false;
+}
+
+export { getUsers,createUser,updateUser,deleteUser,findByPhoneNumber,getUserByRole };

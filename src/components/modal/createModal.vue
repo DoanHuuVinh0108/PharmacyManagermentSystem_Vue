@@ -26,6 +26,8 @@
             :is="getComponentType(field.type)"
             v-model:value="formState[field.name]"
             :placeholder="`Enter ${field.label}`"
+            :options="field.type === 'select' || field.type === 'multiselect' ? field.options : null"
+            :mode="field.type === 'multiselect' ? 'multiple' : null"
             :disabled="field.disabled"
             :min="field.type === 'int' ? 0 : null"
             :format="field.type === 'date' ? dateFormat : null"
@@ -39,7 +41,7 @@
 <script>
 import { defineComponent, ref } from 'vue';
 import { PlusCircleOutlined } from '@ant-design/icons-vue';
-import { DatePicker, Input, InputNumber, Upload } from 'ant-design-vue';
+import { DatePicker, Input, InputNumber, Upload, Select } from 'ant-design-vue';
 import dayjs from 'dayjs';    
 import localizedFormat from 'dayjs/plugin/localizedFormat'; 
 
@@ -133,6 +135,9 @@ export default defineComponent({
           return Input.Password;
         case 'image':
           return Upload;
+        case 'select':
+        case 'multiselect':
+          return Select;
         case 'string':
         default:
           return Input;

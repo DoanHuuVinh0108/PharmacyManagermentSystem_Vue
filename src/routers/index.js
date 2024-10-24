@@ -8,6 +8,7 @@ import PharmacyPage from '../pages/pharmacyPage.vue';
 import CategoryPage from '../pages/categoryPage.vue';
 import CreateOrderPage from '../pages/createOrderPage.vue';
 import LoginPage from '../pages/loginPage.vue';
+import SalaryPage from '../pages/salaryPage.vue';
 const routes = [
     {
         path: '/',
@@ -36,6 +37,10 @@ const routes = [
             {
                 path: 'createOrder',
                 component: CreateOrderPage
+            },
+            {
+                path: 'salaries',
+                component: SalaryPage
             }
 
         ]

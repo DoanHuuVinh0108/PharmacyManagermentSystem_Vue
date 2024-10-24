@@ -6,7 +6,14 @@
     <a-button @click="refresh" style="margin-left: 20px" type="primary">Refresh</a-button>
   </a-flex>
 
-  <a-table :columns="columns" :data-source="productData" :scroll="{ x: 1500 }">
+  <a-table :columns="columns" :data-source="productData" :scroll="{ x: 1500 }"
+  :pagination="{
+    current: currentPage,
+    pageSize: pageSize,
+    total: totalItems,
+    onChange: handlePageChange,
+  }"
+  >
     <template #bodyCell="{ column, text, record }">
       <template v-if="column.key === 'operation'">
         <div class="justify-center  text-center">
@@ -95,7 +102,10 @@ export default {
         { title: 'Pharmacy ID', dataIndex: 'pharmacyId', key: 'pharmacyId', width: 150 },
         { title: 'Action', key: 'operation', fixed: 'right', width: 150 }
       ],
-      productData: [] // Product data is initialized as an empty array
+      productData: [],
+      currentPage: 1,
+      pageSize: 10,
+      totalItems: 0
     };
   },
   methods: {
@@ -117,10 +127,14 @@ export default {
     },
     async fetchProducts() {
       try {
-        const products = await getProducts();
-        this.productData = Array.isArray(products) ? products : [];
+        const response = await getProducts({
+          page: this.currentPage,
+          pageSize: this.pageSize,
+        });
+        this.productData = Array.isArray(response.items) ? response.items : [];
+        this.totalItems = response.totalItems;
       } catch (error) {
-        console.error('Failed to fetch products:', error);
+        console.error('Failed to fetch categories:', error);
         this.productData = [];
       }
     },
@@ -135,6 +149,10 @@ export default {
     },
     refresh() {
       this.fetchProducts(); // Refresh the product list
+    },
+    async handlePageChange(page) {
+      this.currentPage = page;
+      await this.fetchProducts();
     }
   },
   async mounted() {
