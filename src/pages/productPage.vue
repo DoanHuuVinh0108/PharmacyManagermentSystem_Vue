@@ -130,6 +130,7 @@ export default {
         const response = await getProducts({
           page: this.currentPage,
           pageSize: this.pageSize,
+          pharmacyId: this.$store.state.pharmacyId
         });
         this.productData = Array.isArray(response.items) ? response.items : [];
         this.totalItems = response.totalItems;

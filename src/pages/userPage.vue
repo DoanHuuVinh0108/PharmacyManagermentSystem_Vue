@@ -175,6 +175,7 @@ export default {
                 { label: 'Full Name', name: 'fullName', type: 'string' },
                 { label: 'Email', name: 'email', type: 'string' },
                 { label: 'Phone Number', name: 'phoneNumber', type: 'string' },
+                { label: "pharmacyId", name: "pharmacyId", type: "int"}
             ];
 
             if (this.isAdmin) {

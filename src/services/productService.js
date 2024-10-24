@@ -2,8 +2,8 @@ import axios from "axios";
 
 const baseURL = 'https://localhost:7194/api/Medicine';
 
-async function getProducts({page, pageSize}) {
-    const response = await axios.get(`${baseURL}/getAll/${page}/${pageSize}`);
+async function getProducts({page, pageSize,pharmacyId}) {
+    const response = await axios.get(`${baseURL}/getAll/${page}/${pageSize}/${pharmacyId}`);
     console.log(response);
     if(response.status == 200) {
         return response.data;

@@ -71,6 +71,7 @@ export default {
         email: [{ required: true, message: 'Please input the email!', trigger: 'blur' }]
       },
       columns: [
+        { title: 'ID', dataIndex: 'id', key: 'id', width: 100 },
         { title: 'Name', dataIndex: 'name', key: 'name', width: 200 },
         { title: 'Address', dataIndex: 'address', key: 'address', width: 200 },
         { title: 'Phone Number', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 150 },
