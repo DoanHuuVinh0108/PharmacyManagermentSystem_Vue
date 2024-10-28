@@ -7,6 +7,8 @@ import 'ant-design-vue/dist/reset.css';
 import router from './routers';
 import store from './store'; // Import the Vuex store
 import VueCookies from 'vue-cookies'; // Import vue-cookies
+import VCalendar from 'v-calendar';
+import 'v-calendar/style.css';
 
 // Create the app instance and use VueCookies, Antd, router, and Vuex store
 const app = createApp(App);
@@ -21,4 +23,5 @@ app.$cookies.config('1d');
 app.use(Antd)
    .use(router)
    .use(store)
+   .use(VCalendar,{})
    .mount('#app');

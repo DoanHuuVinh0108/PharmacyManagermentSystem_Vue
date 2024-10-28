@@ -67,8 +67,9 @@ export default {
             columns: [
                 { title: 'ID', dataIndex: 'id', key: 'id', width: 100 },
                 { title: 'Full Name', dataIndex: 'fullName', key: 'fullName', width: 150 },
-                { title: 'Email', dataIndex: 'email', key: 'email', width: 200 },
+                { title: 'Email', dataIndex: 'email', key: 'email', width: 150 },
                 { title: 'Phone Number', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 150 },
+                { title: 'Pharmacy ID', dataIndex: 'pharmacyId', key: 'pharmacyId', width: 150 },
                 { title: 'Roles', dataIndex: 'roles', key: 'roles', width: 150 },
                 { title: 'Action', key: 'operation', fixed: 'right', width: 150 },
             ],

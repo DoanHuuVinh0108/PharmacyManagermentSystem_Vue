@@ -36,4 +36,12 @@ async function deletePharmacy(payload) {
     return false;
 }
 
-export { getPharmacies,createPharmacy,updatePharmacy,deletePharmacy };
+async function getAll(){
+    const response = await axios.get(`${baseURL}/get`);
+    if(response.status == 200) {
+        return response.data;
+    }
+    return false;
+}
+
+export { getPharmacies,createPharmacy,updatePharmacy,deletePharmacy,getAll };

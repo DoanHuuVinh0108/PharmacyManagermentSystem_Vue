@@ -9,6 +9,8 @@ import CategoryPage from '../pages/categoryPage.vue';
 import CreateOrderPage from '../pages/createOrderPage.vue';
 import LoginPage from '../pages/loginPage.vue';
 import SalaryPage from '../pages/salaryPage.vue';
+import ShiftPage from '../pages/shiftPage.vue';
+import RegisterSchedulePage from '../pages/registerSchedulePage.vue';
 const routes = [
     {
         path: '/',
@@ -41,6 +43,14 @@ const routes = [
             {
                 path: 'salaries',
                 component: SalaryPage
+            },
+            {
+                path: 'shifts',
+                component: ShiftPage
+            },
+            {
+                path: 'registerSchedule',
+                component: RegisterSchedulePage
             }
 
         ]

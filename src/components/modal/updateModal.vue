@@ -38,6 +38,46 @@
               </a-radio>
             </a-radio-group>
           </template>
+          <template v-else-if="field.type === 'select' || field.type === 'multiselect'">
+            <a-select
+              v-model:value="localFormState[field.name]"
+              :placeholder="`Select ${field.label}`"
+              :disabled="field.disabled"
+              :mode="field.type === 'multiselect' ? 'multiple' : undefined"
+              :options="field.options || []"
+              @update:value="(value) => handleFieldChange(field.name, value)"
+            />
+          </template>
+          <template v-else-if="field.type === 'multi-date'">
+            <div v-for="(date, idx) in localFormState[field.name]" :key="idx" class="mb-2 flex items-center gap-2">
+              <a-date-picker
+                v-model:value="localFormState[field.name][idx]"
+                :format="dateFormat"
+                placeholder="Select Date"
+                @update:value="(value) => handleMultiDateChange(field.name, idx, value)"
+              />
+              <a-button 
+                type="text" 
+                danger 
+                @click="removeDate(field.name, idx)"
+                v-if="localFormState[field.name].length > 1"
+              >
+                <DeleteOutlined />
+              </a-button>
+            </div>
+            <a-button type="dashed" class="mt-2" @click="addDate(field.name)">
+              <PlusOutlined /> Add Another Date
+            </a-button>
+          </template>
+          <template v-else-if="field.type === 'date'">
+            <a-date-picker
+              v-model:value="localFormState[field.name]"
+              :format="dateFormat"
+              :placeholder="`Select ${field.label}`"
+              :disabled="field.disabled"
+              @update:value="(value) => handleFieldChange(field.name, value)"
+            />
+          </template>
           <component
             v-else
             :is="getComponentType(field.type)"
@@ -45,10 +85,7 @@
             :placeholder="`Enter ${field.label}`"
             :disabled="field.disabled"
             :min="field.type === 'int' ? 0 : null"
-            :format="field.type === 'date' ? dateFormat : null"
-            :options="field.options || []"
-            :mode="field.type === 'multiselect' ? 'multiple' : undefined"
-            @change="(val, extra) => handleFieldChange(field.name, val, extra, field.type)"
+            @update:value="(value) => handleFieldChange(field.name, value)"
           />
         </a-form-item>
       </a-form>
@@ -74,9 +111,9 @@ import {
   Select, 
   Radio 
 } from 'ant-design-vue';
-import { EditOutlined, UploadOutlined } from '@ant-design/icons-vue';
-import localizedFormat from 'dayjs/plugin/localizedFormat';
+import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue';
 import dayjs from 'dayjs';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
 
 dayjs.extend(localizedFormat);
 
@@ -84,7 +121,8 @@ export default defineComponent({
   name: 'UpdateModal',
   components: {
     EditOutlined,
-    UploadOutlined,
+    DeleteOutlined,
+    PlusOutlined,
   },
   props: {
     objectName: {
@@ -113,14 +151,21 @@ export default defineComponent({
     const loading = ref(false);
     const localFormState = reactive({});
     const formRef = ref(null);
+    const dateFormat = 'YYYY-MM-DD';
 
+    // Watch for changes in formState and update localFormState
     watch(() => props.formState, (newVal) => {
       Object.keys(newVal).forEach(key => {
         const field = props.formFields.find(f => f.name === key);
-        if (field?.type === 'date') {
+        if (!field) return;
+
+        if (field.type === 'date') {
           localFormState[key] = newVal[key] ? dayjs(newVal[key]) : null;
-        } else if (field?.type === 'radio') {
-          // Ensure radio value is properly initialized
+        } else if (field.type === 'multi-date') {
+          localFormState[key] = Array.isArray(newVal[key]) 
+            ? newVal[key].map(date => date ? dayjs(date) : null)
+            : [null];
+        } else if (field.type === 'radio') {
           localFormState[key] = newVal[key] !== undefined ? newVal[key] : '';
         } else {
           localFormState[key] = newVal[key];
@@ -136,15 +181,25 @@ export default defineComponent({
       isModalOpen.value = false;
     };
 
-    const handleFieldChange = (fieldName, value, extra, fieldType) => {
-      if (fieldType === 'date') {
-        localFormState[fieldName] = value;
-      } else if (fieldType === 'radio') {
-        localFormState[fieldName] = value;
-      } else if (fieldType === 'select' || fieldType === 'multiselect') {
-        localFormState[fieldName] = value;
-      } else {
-        localFormState[fieldName] = value;
+    const handleFieldChange = (fieldName, value) => {
+      localFormState[fieldName] = value;
+    };
+
+    const handleMultiDateChange = (fieldName, index, value) => {
+      if (Array.isArray(localFormState[fieldName])) {
+        localFormState[fieldName][index] = value;
+      }
+    };
+
+    const addDate = (fieldName) => {
+      if (Array.isArray(localFormState[fieldName])) {
+        localFormState[fieldName].push(null);
+      }
+    };
+
+    const removeDate = (fieldName, index) => {
+      if (Array.isArray(localFormState[fieldName]) && localFormState[fieldName].length > 1) {
+        localFormState[fieldName].splice(index, 1);
       }
     };
 
@@ -157,15 +212,26 @@ export default defineComponent({
         loading.value = true;
         const formData = { ...localFormState };
 
-        Object.keys(formData).forEach(key => {
-          if (formData[key] instanceof dayjs) {
-            formData[key] = formData[key].format('YYYY-MM-DD');
+        // Process the form data
+        for (const field of props.formFields) {
+          const value = formData[field.name];
+          
+          if (field.type === 'multi-date' && Array.isArray(value)) {
+            formData[field.name] = value
+              .map(date => {
+                if (!date) return null;
+                return dayjs.isDayjs(date) ? date.format(dateFormat) : null;
+              })
+              .filter(Boolean);
+          } else if (field.type === 'date' && value) {
+            formData[field.name] = dayjs.isDayjs(value) ? value.format(dateFormat) : null;
           }
-        });
+        }
 
         await props.updateObject(formData);
         isModalOpen.value = false;
         emit(`${props.objectName}Updated`);
+        message.success(`${props.objectName} updated successfully`);
       } catch (error) {
         console.error('Failed to update:', error);
         message.error(`Failed to update ${props.objectName}`);
@@ -178,8 +244,6 @@ export default defineComponent({
       switch (type) {
         case 'int':
           return InputNumber;
-        case 'date':
-          return DatePicker;
         case 'password':
           return Input.Password;
         case 'image':
@@ -198,11 +262,14 @@ export default defineComponent({
       loading,
       localFormState,
       formRef,
-      dateFormat: 'YYYY-MM-DD',
+      dateFormat,
       showModal,
       handleCancel,
       handleOk,
       handleFieldChange,
+      handleMultiDateChange,
+      addDate,
+      removeDate,
       getComponentType,
     };
   },

@@ -52,7 +52,7 @@ export default createStore({
         const { accessToken, userId, roles, pharmacyId, fullName } = response.data;
 
         // Store tokens and user data
-        commit("setAuthTokens", accessToken);
+         commit("setAuthTokens", accessToken);
         commit("setUserData", { userId, roles, pharmacyId, fullName });
       } catch (error) {
         console.error("Login failed:", error);
