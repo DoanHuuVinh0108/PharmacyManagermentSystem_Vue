@@ -208,11 +208,9 @@ export default defineComponent({
         await props.createObject(formData);
         emit('objectCreated');
         resetFormState();
-        message.success(`${props.objectName} created successfully`);
         visible.value = false;
       } catch (error) {
         console.error('Validation/API call error:', error);
-        message.error(`Failed to create ${props.objectName}`);
       } finally {
         loading.value = false;
       }

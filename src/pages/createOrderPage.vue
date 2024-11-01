@@ -257,10 +257,10 @@ export default {
             suggestions: [],
             debounceTimeout: null,
             cart: {
-                pharmacyId: 1,
+                pharmacyId: this.$store.state.pharmacyId,
                 customerId: null,
                 customerName: null,
-                employeeId: "f22f1fb9-d5b8-420f-90f4-0bc0ee5362c8",
+                employeeId: this.$store.state.userId,
                 prescriptionId: null,
                 status: "Completed",
                 createOrderDetailRequests: [

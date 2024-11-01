@@ -231,10 +231,8 @@ export default defineComponent({
         await props.updateObject(formData);
         isModalOpen.value = false;
         emit(`${props.objectName}Updated`);
-        message.success(`${props.objectName} updated successfully`);
       } catch (error) {
         console.error('Failed to update:', error);
-        message.error(`Failed to update ${props.objectName}`);
       } finally {
         loading.value = false;
       }

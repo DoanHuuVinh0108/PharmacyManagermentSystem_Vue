@@ -9,6 +9,10 @@ import store from './store'; // Import the Vuex store
 import VueCookies from 'vue-cookies'; // Import vue-cookies
 import VCalendar from 'v-calendar';
 import 'v-calendar/style.css';
+import Toast from 'vue-toastification';
+import 'vue-toastification/dist/index.css';
+
+
 
 // Create the app instance and use VueCookies, Antd, router, and Vuex store
 const app = createApp(App);
@@ -22,6 +26,11 @@ app.$cookies.config('1d');
 // Register other plugins
 app.use(Antd)
    .use(router)
+   .use(Toast, {
+         timeout: 2000,
+         closeOnClick: true,
+         draggable: true,
+   })
    .use(store)
    .use(VCalendar,{})
    .mount('#app');

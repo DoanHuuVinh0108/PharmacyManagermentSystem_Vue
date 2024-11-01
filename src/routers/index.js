@@ -11,6 +11,7 @@ import LoginPage from '../pages/loginPage.vue';
 import SalaryPage from '../pages/salaryPage.vue';
 import ShiftPage from '../pages/shiftPage.vue';
 import RegisterSchedulePage from '../pages/registerSchedulePage.vue';
+import CreateReceiptPage from '../pages/createReceiptPage.vue';
 const routes = [
     {
         path: '/',
@@ -51,6 +52,10 @@ const routes = [
             {
                 path: 'registerSchedule',
                 component: RegisterSchedulePage
+            },
+            {
+                path: 'createReceipt',
+                component: CreateReceiptPage
             }
 
         ]

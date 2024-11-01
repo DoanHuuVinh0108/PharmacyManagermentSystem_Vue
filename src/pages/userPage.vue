@@ -1,11 +1,11 @@
 <template>
-    <a-flex :align="'start'" style="margin-bottom: 20px">
+    <a-flex :align="'start'" style="margin-bottom: 20px" class="m-2">
         <CreateModal objectName="User" :formFields="userFormFieldsCreate" :formState="userFormState"
             :rules="userFormRules" :createObject="createUser" @objectCreated="refresh" />
         <a-button @click="refresh" style="margin-left: 20px" type="primary">Refresh</a-button>
     </a-flex>
 
-    <a-table :columns="columns" :data-source="normalizedUserData" :scroll="{ x: 1500 }" :pagination="{
+    <a-table class="m-2" :columns="columns" :data-source="normalizedUserData" :scroll="{ x: 1500 }" :pagination="{
         current: currentPage,
         pageSize: pageSize,
         total: totalItems,
